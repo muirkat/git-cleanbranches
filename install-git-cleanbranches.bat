@@ -1,7 +1,7 @@
 @echo off
 setlocal
 
-:: Define script URL
+:: Define script URL and other variables
 set SCRIPT_URL=https://raw.githubusercontent.com/muirkat/git-cleanbranches/refs/heads/main/git-cleanbranches.bat
 set SCRIPT_NAME=git-cleanbranches.bat
 set INSTALL_DIR=%USERPROFILE%\bin
@@ -16,6 +16,7 @@ if not exist "%INSTALL_DIR%" (
 powershell -Command "(New-Object Net.WebClient).DownloadFile('%SCRIPT_URL%', '%INSTALL_DIR%\%SCRIPT_NAME%')"
 if exist "%INSTALL_DIR%\%SCRIPT_NAME%" (
     :: Download successful
+    echo [INFO] Script downloaded successfully to "%INSTALL_DIR%\%SCRIPT_NAME%"
 ) else (
     echo [ERROR] Download failed!
     exit /b 1
@@ -24,15 +25,16 @@ if exist "%INSTALL_DIR%\%SCRIPT_NAME%" (
 :: Ensure the script is executable
 attrib +x "%INSTALL_DIR%\%SCRIPT_NAME%"
 
-:: Make script globally accessible
+:: Make script globally accessible by adding its directory to the PATH if not already added
 echo %PATH% | findstr /I /C:"%INSTALL_DIR%" >nul || (
-    setx PATH "%INSTALL_DIR%" /M
+    setx PATH "%INSTALL_DIR%;%PATH%" /M
+    echo [INFO] Added "%INSTALL_DIR%" to PATH
 )
 
 :: Confirm installation
-echo Installation complete. You can now run 'git cleanbranches' from any command prompt.
+echo Installation complete. You can now run '%COMMAND_NAME%' from any command prompt.
 
-:: Testing installation
-where git-cleanbranches && echo [SUCCESS] 'git cleanbranches' is now available.
+:: Test the installation
+where %COMMAND_NAME% && echo [SUCCESS] '%COMMAND_NAME%' is now available.
 
 endlocal
