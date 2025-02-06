@@ -2,10 +2,10 @@
 setlocal
 
 :: Define script URL
-set SCRIPT_URL=https://raw.githubusercontent.com/muirkat/git-cleanbranches/refs/heads/main/git-cleanbranches.bat
-set SCRIPT_NAME=git-cleanbranches.bat
+set SCRIPT_URL=https://raw.githubusercontent.com/muirkat/git-cleanbranches/refs/heads/main/git%20cleanbranches.bat
+set SCRIPT_NAME=git cleanbranches.bat
 set INSTALL_DIR=%USERPROFILE%\bin
-set COMMAND_NAME=git-cleanbranches
+set COMMAND_NAME=git cleanbranches
 
 :: Log script start
 echo [DEBUG] Starting installation process...
