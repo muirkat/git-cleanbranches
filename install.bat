@@ -26,14 +26,22 @@ if exist "%INSTALL_DIR%\%SCRIPT_NAME%" (
     exit /b 1
 )
 
+:: Ensure the script is executable
+echo [DEBUG] Making %SCRIPT_NAME% executable
+attrib +x "%INSTALL_DIR%\%SCRIPT_NAME%"
+
 :: Make script globally accessible
 echo [DEBUG] Adding %INSTALL_DIR% to PATH if not already present...
 echo %PATH% | findstr /I /C:"%INSTALL_DIR%" >nul || (
-    setx PATH "%PATH%;%INSTALL_DIR%" /M
+    setx PATH "%INSTALL_DIR%" /M
     echo [DEBUG] PATH updated. You may need to restart your terminal.
 )
 
 :: Confirm installation
-echo [DEBUG] Installation complete. You can now run '%COMMAND_NAME%' from any command prompt.
+echo [DEBUG] Installation complete. You can now run 'git cleanbranches' from any command prompt.
 
+echo [DEBUG] Testing installation...
+where git-cleanbranches && echo [SUCCESS] 'git cleanbranches' is now available.
+
+echo [DEBUG] Finished.
 endlocal
