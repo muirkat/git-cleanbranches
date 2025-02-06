@@ -1,5 +1,5 @@
 $scriptName = "git-cleanbranches.ps1"
-$scriptUrl = "https://raw.githubusercontent.com/your-username/your-repo/main/$scriptName"
+$scriptUrl = "https://raw.githubusercontent.com/muirkat/git-cleanbranches/refs/heads/main/$scriptName"
 $scriptDestination = "$env:USERPROFILE\Scripts"
 
 # Ensure the destination folder exists
