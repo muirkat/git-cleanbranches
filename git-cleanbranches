@@ -1,0 +1,78 @@
+#!/bin/bash
+
+# Ensure the script runs inside a Git repository
+if ! git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+    echo "Error: This is not a Git repository."
+    exit 1
+fi
+
+# Check if Git is installed
+if ! command -v git &>/dev/null; then
+    echo "Error: Git is not installed."
+    exit 1
+fi
+
+# Ask for the email and months
+read -p "Enter Your Email: " YourEmail
+read -p "Enter the number of months: " Monthm
+
+# Validate number input
+if ! [[ "$Monthm" =~ ^[0-9]+$ ]]; then
+    echo "Error: Please enter a valid number of months."
+    exit 1
+fi
+
+# Calculate the cutoff date
+if [[ "$(uname)" == "Darwin" ]]; then
+    cutoff_date=$(date -v -${Monthm}m +%Y-%m-%d)
+else
+    cutoff_date=$(date --date="${Monthm} months ago" +%Y-%m-%d)
+fi
+
+# List local branches to delete
+echo "Listing local branches to delete..."
+local_branches=$(git for-each-ref --format='%(refname:short) %(authoremail) %(authordate:iso)' refs/heads | \
+awk -v cutoff_date="$cutoff_date" -v email="$YourEmail" '$3 < cutoff_date && $2 ~ email && $1 !~ /^(master|development|staging)$/ {print $1}')
+
+# List remote branches to delete
+echo "Listing remote branches to delete..."
+remote_branches=$(git for-each-ref --format='%(refname:short) %(authoremail) %(authordate:iso)' refs/remotes | \
+awk -v cutoff_date="$cutoff_date" -v email="$YourEmail" '$3 < cutoff_date && $2 ~ email && $1 !~ /^(origin\/master|origin\/development|origin\/staging)$/ {print $1}' | sed 's|^origin/||')
+
+# Confirm and delete local branches
+if [[ -n "$local_branches" ]]; then
+    echo -e "\nThe following local branches will be deleted:"
+    echo "$local_branches"
+    read -p "Do you want to delete these local branches? (y/n): " confirm_local
+    if [[ "$confirm_local" =~ ^[Yy]$ ]]; then
+        echo "Deleting local branches..."
+        while IFS= read -r branch; do
+            git branch -D "$branch"
+        done <<< "$local_branches"
+        echo "Local branches deleted."
+    else
+        echo "Skipping local branch deletion."
+    fi
+else
+    echo "No local branches to delete."
+fi
+
+# Confirm and delete remote branches
+if [[ -n "$remote_branches" ]]; then
+    echo -e "\nThe following remote branches will be deleted:"
+    echo "$remote_branches"
+    read -p "Do you want to delete these remote branches? (y/n): " confirm_remote
+    if [[ "$confirm_remote" =~ ^[Yy]$ ]]; then
+        echo "Deleting remote branches..."
+        while IFS= read -r branch; do
+            git push origin --delete "$branch"
+        done <<< "$remote_branches"
+        echo "Remote branches deleted."
+    else
+        echo "Skipping remote branch deletion."
+    fi
+else
+    echo "No remote branches to delete."
+fi
+
+echo "Operation completed."
