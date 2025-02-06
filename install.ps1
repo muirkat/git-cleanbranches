@@ -1,6 +1,7 @@
 $scriptName = "git-cleanbranches.ps1"
 $scriptUrl = "https://raw.githubusercontent.com/muirkat/git-cleanbranches/refs/heads/main/$scriptName"
 $scriptDestination = "$env:USERPROFILE\Scripts"
+$profileFile = $PROFILE
 
 # Ensure the destination folder exists
 if (!(Test-Path $scriptDestination)) {
@@ -23,5 +24,24 @@ if ($envPath -notlike "*$scriptDestination*") {
 # Allow PowerShell scripts to run
 Write-Host "Setting PowerShell execution policy..." -ForegroundColor Cyan
 Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy Unrestricted -Force
+
+# Add the git-cleanbranches function to the PowerShell profile if not already present
+$functionCode = @"
+Function git-cleanbranches {
+    & "$scriptDestination\$scriptName" @args
+}
+"@
+
+# Check if the function is already in the profile
+if (-not (Select-String -Pattern "Function git-cleanbranches" -Path $profileFile)) {
+    Write-Host "Adding git-cleanbranches function to PowerShell profile..." -ForegroundColor Cyan
+    Add-Content -Path $profileFile -Value $functionCode
+} else {
+    Write-Host "git-cleanbranches function already exists in profile" -ForegroundColor Green
+}
+
+# Reload the profile to apply changes
+Write-Host "Reloading PowerShell profile..." -ForegroundColor Cyan
+. $PROFILE
 
 Write-Host "Installation complete! You can now run 'git cleanbranches' from any PowerShell window." -ForegroundColor Green
