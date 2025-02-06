@@ -1,4 +1,3 @@
-@echo off
 setlocal
 
 :: Define script URL
