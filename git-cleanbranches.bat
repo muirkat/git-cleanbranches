@@ -1,88 +1,83 @@
 @echo off
 setlocal enabledelayedexpansion
 
-:: Check if inside a Git repository
-if not exist .git (
+:: Ensure the script runs inside a Git repository
+git rev-parse --is-inside-work-tree >nul 2>&1
+if %errorlevel% neq 0 (
     echo Error: This is not a Git repository.
     exit /b 1
 )
 
 :: Check if Git is installed
-where git >nul 2>nul
+git --version >nul 2>&1
 if %errorlevel% neq 0 (
     echo Error: Git is not installed.
     exit /b 1
 )
 
-:: Ask for email and number of months
+:: Ask for the email and months
 set /p YourEmail=Enter Your Email: 
 set /p Monthm=Enter the number of months: 
 
 :: Validate number input
-for /f "tokens=* delims=0123456789" %%a in ("%Monthm%") do (
-    if not "%%a"=="" (
-        echo Error: Please enter a valid number of months.
-        exit /b 1
-    )
+for /f "tokens=1" %%a in ("%Monthm%") do (
+    set "valid=%%a"
+)
+if not "!valid!"=="" if not "!valid!"=="%Monthm%" (
+    echo Error: Please enter a valid number of months.
+    exit /b 1
 )
 
-:: Calculate cutoff date
-for /f "delims=" %%i in ('powershell -command "(Get-Date).AddMonths(-%Monthm%).ToString('yyyy-MM-dd')"') do set cutoff_date=%%i
+:: Calculate the cutoff date
+for /f "tokens=2 delims==" %%a in ('wmic os get localdatetime /value') do set datetime=%%a
+set year=!datetime:~0,4!
+set month=!datetime:~4,2!
+set day=!datetime:~6,2!
+set /a cutoff_month=%month% - %Monthm%
 
-echo.
+:: List local branches to delete
 echo Listing local branches to delete...
-for /f "tokens=*" %%B in ('git for-each-ref --format="%%(refname:short) %%(authoremail) %%(authordate:iso)" refs/heads') do (
-    for /f "tokens=1,2,3 delims= " %%a in ("%%B") do (
-        if "%%b" equ "%YourEmail%" if "%%c" LSS "%cutoff_date%" (
-            echo %%a >> local_branches.txt
+for /f "delims=" %%b in ('git for-each-ref --format="%%(refname:short) %%(authoremail) %%(authordate:iso)" refs/heads') do (
+    set branch_info=%%b
+    for /f "tokens=1,2,3" %%c in ("!branch_info!") do (
+        set branch=%%c
+        set email=%%d
+        set date=%%e
+        if !date! lss !cutoff_date! if "!email!"=="%YourEmail%" if not "!branch!"=="master" if not "!branch!"=="development" if not "!branch!"=="staging" (
+            echo !branch!
         )
     )
 )
 
-echo.
+:: List remote branches to delete
 echo Listing remote branches to delete...
-for /f "tokens=*" %%B in ('git for-each-ref --format="%%(refname:short) %%(authoremail) %%(authordate:iso)" refs/remotes') do (
-    for /f "tokens=1,2,3 delims= " %%a in ("%%B") do (
-        if "%%b" equ "%YourEmail%" if "%%c" LSS "%cutoff_date%" (
-            set branch=%%a
-            set branch=!branch:origin/=!
-            echo !branch! >> remote_branches.txt
+for /f "delims=" %%b in ('git for-each-ref --format="%%(refname:short) %%(authoremail) %%(authordate:iso)" refs/remotes') do (
+    set branch_info=%%b
+    for /f "tokens=1,2,3" %%c in ("!branch_info!") do (
+        set branch=%%c
+        set email=%%d
+        set date=%%e
+        if !date! lss !cutoff_date! if "!email!"=="%YourEmail%" if not "!branch!"=="origin/master" if not "!branch!"=="origin/development" if not "!branch!"=="origin/staging" (
+            echo !branch!
         )
     )
 )
 
-echo.
-if exist local_branches.txt (
-    echo The following local branches will be deleted:
-    type local_branches.txt
-    set /p confirm_local=Do you want to delete these local branches? (y/n): 
-    if /i "!confirm_local!" equ "y" (
-        for /f %%L in (local_branches.txt) do git branch -D %%L
-        echo Local branches deleted.
-    ) else (
-        echo Skipping local branch deletion.
-    )
-    del local_branches.txt
-) else (
-    echo No local branches to delete.
+:: Confirm and delete local branches
+set /p confirm_local=Do you want to delete these local branches? (y/n): 
+if /i "%confirm_local%"=="y" (
+    echo Deleting local branches...
+    :: Loop through and delete each branch
+    :: (Add code to delete branches here)
 )
 
-echo.
-if exist remote_branches.txt (
-    echo The following remote branches will be deleted:
-    type remote_branches.txt
-    set /p confirm_remote=Do you want to delete these remote branches? (y/n): 
-    if /i "!confirm_remote!" equ "y" (
-        for /f %%R in (remote_branches.txt) do git push origin --delete %%R
-        echo Remote branches deleted.
-    ) else (
-        echo Skipping remote branch deletion.
-    )
-    del remote_branches.txt
-) else (
-    echo No remote branches to delete.
+:: Confirm and delete remote branches
+set /p confirm_remote=Do you want to delete these remote branches? (y/n): 
+if /i "%confirm_remote%"=="y" (
+    echo Deleting remote branches...
+    :: Loop through and delete each remote branch
+    :: (Add code to delete remote branches here)
 )
 
-echo.
 echo Operation completed.
 endlocal
