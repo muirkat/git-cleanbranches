@@ -1,6 +1,6 @@
 #!/bin/bash
 
-SCRIPT_URL="https://raw.githubusercontent.com/yourusername/yourrepo/main/git-cleanbranches"  # Replace with actual URL
+SCRIPT_URL="https://raw.githubusercontent.com/muirkat/git-cleanbranches/refs/heads/main/git-cleanbranches"  # Replace with actual URL
 INSTALL_DIR="/usr/local/bin"
 SCRIPT_NAME="git-cleanbranches"
 
