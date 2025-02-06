@@ -1,15 +1,15 @@
 $scriptName = "git-cleanbranches.ps1"
-$scriptSource = "$PSScriptRoot\$scriptName"
+$scriptUrl = "https://raw.githubusercontent.com/your-username/your-repo/main/$scriptName"
 $scriptDestination = "$env:USERPROFILE\Scripts"
 
 # Ensure the destination folder exists
 if (!(Test-Path $scriptDestination)) {
-    New-Item -ItemType Directory -Path $scriptDestination | Out-Null
+    New-Item -ItemType Directory -Path $scriptDestination -Force | Out-Null
 }
 
-# Copy the script to the destination
-Write-Host "Copying script to $scriptDestination..." -ForegroundColor Cyan
-Copy-Item -Path $scriptSource -Destination "$scriptDestination\$scriptName" -Force
+# Download the script from GitHub
+Write-Host "Downloading $scriptName from GitHub..." -ForegroundColor Cyan
+Invoke-WebRequest -Uri $scriptUrl -OutFile "$scriptDestination\$scriptName"
 
 # Add the folder to PATH if not already added
 $envPath = [System.Environment]::GetEnvironmentVariable("Path", [System.EnvironmentVariableTarget]::User)
